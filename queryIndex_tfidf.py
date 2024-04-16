@@ -1,7 +1,7 @@
-import sys
 import re
-
 from tkinter import *
+import customtkinter
+import CTkListbox
 from functools import reduce
 from nltk.stem import PorterStemmer
 from collections import defaultdict
@@ -35,7 +35,7 @@ class QueryIndex:
         return list(reduce(lambda x, y: set(x) & set(y), lists))
 
     def getStopwords(self):
-        with open(self.stopwordsFile, 'r') as f:
+        with open(self.stopwordsFile, 'r', errors='ignore') as f:
             stopwords = [line.rstrip() for line in f]
             self.sw = dict.fromkeys(stopwords)
 
@@ -56,7 +56,7 @@ class QueryIndex:
         return [[x[0] for x in p] for p in postings]
 
     def linenumbers(self):
-        with open("lines.dat", 'r') as f:
+        with open("lines.dat", 'r', errors='ignore') as f:
             for line in f:
                 line = line.rstrip()
                 term, postings = line.split('|')
@@ -67,7 +67,7 @@ class QueryIndex:
 
     def readIndex(self):
         # read main index
-        with open(self.indexFile, 'r') as f:
+        with open(self.indexFile, 'r', errors='ignore') as f:
             # first read the number of documents
             self.numDocuments = int(f.readline().rstrip())
             for line in f:
@@ -84,7 +84,7 @@ class QueryIndex:
                 self.idf[term] = float(idf)
 
         # read title index
-        with open(self.titleIndexFile, 'r') as f:
+        with open(self.titleIndexFile, 'r', errors='ignore') as f:
             for line in f:
                 pageid, title = line.rstrip().split(' ', 1)
                 self.titleIndex[int(pageid)] = title
@@ -223,27 +223,15 @@ class QueryIndex:
             return self.pq(q)
 
 
-def init(win):
-    win.title("File Search")
-    labelQuery.grid(row=0, column=0, sticky="W")
-    entryQuery.grid(row=1, column=0, rowspan=3)
-    btnSearch.grid(row=4, column=0)
-    fileList.grid(row=0, column=1, rowspan=5)
-    yscroll.grid(row=0, column=2, rowspan=5, sticky="NS")
-    fileList.configure(yscrollcommand=yscroll.set)
-    yscroll.configure(command=fileList.yview)
-
-
-# find button callback
 def search():
     # get start directory and file ending
-    startDir = entryQuery.get()
-    result = q.queryIndex(startDir)
+    query = entryQuery.get()
+    result = q.queryIndex(query)
     # clear the listbox
     fileList.delete(0, END)
 
     name = ""
-    q1 = q.getTerms(startDir)
+    q1 = q.getTerms(query)
     i = 0
 
     try:
@@ -284,17 +272,23 @@ def search():
         fileList.insert(END, "Not present")
 
 
-# create top-level window object
-win = Tk()
+win = customtkinter.CTk()
+win.title("  File Search")
+win.geometry("500x250")
+win.iconbitmap('search.ico')
+customtkinter.set_appearance_mode("system")
 
-# create widgets
-labelQuery = Label(win, text="query")
-entryQuery = Entry(win, width=12)
-fileList = Listbox(win, width=80)
-yscroll = Scrollbar(win, orient=VERTICAL)
-btnSearch = Button(win, text="Search", width=8, command=search)
+frame = customtkinter.CTkFrame(win)
+frame.grid(row=0, column=0, padx=10, pady=10)
 
-# initialise and run main loop
-init(win)
+entryQuery = customtkinter.CTkEntry(frame, width=250, corner_radius=25, placeholder_text="Type a query...")
+entryQuery.grid(row=0, column=1, padx=(20, 5))
+
+btnSearch = customtkinter.CTkButton(frame, text="Search", width=10, command=search, corner_radius=25)
+btnSearch.grid(row=0, column=2, padx=(0, 20), pady=20)
+
+fileList = CTkListbox.CTkListbox(win, width=420)
+fileList.grid(row=1, column=0, padx=20, pady=20)
+
 q = QueryIndex()
 win.mainloop()
