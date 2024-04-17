@@ -2,6 +2,8 @@ from time import perf_counter
 import re
 
 from tkinter import *
+import customtkinter
+import CTkListbox
 from functools import reduce
 from nltk.stem import PorterStemmer
 from collections import defaultdict
@@ -223,17 +225,6 @@ class QueryIndex:
             return self.pq(q)
 
 
-def init(win):
-    win.title("File Search")
-    labelQuery.grid(row=0, column=0, sticky="W")
-    entryQuery.grid(row=1, column=0, rowspan=3)
-    btnSearch.grid(row=4, column=0)
-    fileList.grid(row=0, column=1, rowspan=5)
-    yscroll.grid(row=0, column=2, rowspan=5, sticky="NS")
-    fileList.configure(yscrollcommand=yscroll.set)
-    yscroll.configure(command=fileList.yview)
-
-
 # find button callback
 def search():
     # get start directory and file ending
@@ -293,18 +284,26 @@ def search():
         fileList.insert(END, "Not present")
 
 
-# create top-level window object
-win = Tk()
+win = customtkinter.CTk()
+win.title("  File Search")
+win.geometry("640x480")
+win.iconbitmap('Assets\search.ico')
+customtkinter.set_appearance_mode("")
+
+frame = customtkinter.CTkFrame(win)
+frame.grid(row=0, column=0, padx=10, pady=10)
+frame.place(relx=0.2, rely=0.1)
+
+entryQuery = customtkinter.CTkEntry(frame, width=250, corner_radius=25, placeholder_text="Type a query...")
+entryQuery.grid(row=0, column=1, padx=(20, 5))
+
+btnSearch = customtkinter.CTkButton(frame, text="Search", width=10, command=search, corner_radius=25)
+btnSearch.grid(row=0, column=2, padx=(0, 20), pady=20)
 
 
-# create widgets
-labelQuery = Label(win, text="query")
-entryQuery = Entry(win, width=12)
-fileList = Listbox(win, width=80)
-yscroll = Scrollbar(win, orient=VERTICAL)
-btnSearch = Button(win, text="Search", width=8, command=search)
+fileList = CTkListbox.CTkListbox(win, width=500, height=200)
+fileList.grid(row=2, column=0, padx=20, pady=20)
+fileList.place(relx=0.1, rely=0.3)
 
-# initialise and run main loop
-init(win)
 q = QueryIndex()
 win.mainloop()
