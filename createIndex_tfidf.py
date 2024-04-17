@@ -26,7 +26,7 @@ class CreateIndex:
 
     def getStopwords(self):
         """get stopwords from the stopwords file"""
-        with open(self.stopwordsFile, 'r') as f:
+        with open(self.stopwordsFile, 'r', errors="ignore") as f:
             stopwords = [line.rstrip() for line in f]
             self.sw = dict.fromkeys(stopwords)
 
@@ -40,7 +40,7 @@ class CreateIndex:
         return line
 
     def writelines(self):
-        with open("lines.dat", 'w') as f:
+        with open("lines.dat", 'w', errors="ignore") as f:
             for term, postings in self.ldict.items():
                 f.write('%s|' % term)
 
@@ -54,7 +54,7 @@ class CreateIndex:
     def writeIndexToFile(self):
         '''write the index to the file'''
         # write main inverted index
-        with open(self.indexFile, 'w') as f:
+        with open(self.indexFile, 'w', errors="ignore") as f:
             # first line is the number of documents
             f.write(str(self.numDocuments) + '\n')
             self.numDocuments = float(self.numDocuments)
@@ -71,7 +71,7 @@ class CreateIndex:
                 f.write('|'.join((term, postingData, tfData, idfData)) + '\n')
 
         # write title index
-        with open(self.titleIndexFile, 'w') as f:
+        with open(self.titleIndexFile, 'w', errors="ignore") as f:
             for pageid, title in self.titleIndex.items():
                 f.write(str(pageid) + ' ' + title + '\n')
 
@@ -81,13 +81,13 @@ class CreateIndex:
         for name, filename in enumerate(os.listdir('Files/')):
             if filename.endswith(".txt"):
                 #print(filename)
-                with open('Files/' + filename, 'r') as file:
+                with open('Files/' + filename, 'r', errors="ignore") as file:
                     text = file.read()
 
                 pageid = name
                 linedict = {}
                 ct = 1
-                with open('Files/' + filename, 'r') as file:
+                with open('Files/' + filename, 'r', errors="ignore") as file:
                     for line in file:
                         x = line.lower()
                         x = re.sub(r'[^a-z0-9 ]', ' ', x)

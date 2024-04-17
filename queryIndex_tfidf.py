@@ -1,4 +1,4 @@
-import sys
+from time import perf_counter
 import re
 
 from tkinter import *
@@ -35,7 +35,7 @@ class QueryIndex:
         return list(reduce(lambda x, y: set(x) & set(y), lists))
 
     def getStopwords(self):
-        with open(self.stopwordsFile, 'r') as f:
+        with open(self.stopwordsFile, 'r', errors="ignore") as f:
             stopwords = [line.rstrip() for line in f]
             self.sw = dict.fromkeys(stopwords)
 
@@ -56,7 +56,7 @@ class QueryIndex:
         return [[x[0] for x in p] for p in postings]
 
     def linenumbers(self):
-        with open("lines.dat", 'r') as f:
+        with open("lines.dat", 'r', errors="ignore") as f:
             for line in f:
                 line = line.rstrip()
                 term, postings = line.split('|')
@@ -67,7 +67,7 @@ class QueryIndex:
 
     def readIndex(self):
         # read main index
-        with open(self.indexFile, 'r') as f:
+        with open(self.indexFile, 'r', errors="ignore") as f:
             # first read the number of documents
             self.numDocuments = int(f.readline().rstrip())
             for line in f:
@@ -84,7 +84,7 @@ class QueryIndex:
                 self.idf[term] = float(idf)
 
         # read title index
-        with open(self.titleIndexFile, 'r') as f:
+        with open(self.titleIndexFile, 'r', errors="ignore") as f:
             for line in f:
                 pageid, title = line.rstrip().split(' ', 1)
                 self.titleIndex[int(pageid)] = title
@@ -238,6 +238,7 @@ def init(win):
 def search():
     # get start directory and file ending
     startDir = entryQuery.get()
+    t_start = perf_counter()
     result = q.queryIndex(startDir)
     # clear the listbox
     fileList.delete(0, END)
@@ -261,9 +262,11 @@ def search():
                         if len(pos) != 0:
                             break
                 fileList.insert(END, "Line Numbers : " + "'" + q1[i] + "'" + " " + str(line))
+                t_end = perf_counter()
             else:
                 i = 0
                 fileList.insert(END, q.titleIndex[doc])
+                fileList.insert(END, "\n")
                 pos = q.ldict[q1[i]]
                 pos = [b for a, b in pos if a == pageid]
                 if len(pos) == 0:
@@ -278,7 +281,13 @@ def search():
                 else:
                     pos = pos[0]
 
-                fileList.insert(END, "Line Numbers : " + "'" + q1[i] + "'" + " " + str(line))
+                with open("Files/"+q.titleIndex[pageid], "r", errors="ignore") as file:
+                    content = file.readlines()
+                    for line_no in line:
+                        fileList.insert(END,   f"[{str(line_no)}] {content[line_no -2]} {content[line_no - 1]} {content[line_no]}")
+                fileList.insert(END, "\n")
+                t_end = perf_counter()
+                #fileList.insert(END, "Line Numbers : " + "'" + q1[i] + "'" + " " + str(line))
                 name = doc
     except:
         fileList.insert(END, "Not present")
@@ -286,6 +295,7 @@ def search():
 
 # create top-level window object
 win = Tk()
+
 
 # create widgets
 labelQuery = Label(win, text="query")
